@@ -1,0 +1,178 @@
+name: Build Android APK et Windows EXE
+
+# Se declenche sur push/PR vers main, sur un tag de version (release),
+# ou manuellement depuis l'onglet Actions de GitHub.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: "3.24.5"
+
+permissions:
+  contents: write
+
+jobs:
+  # ------------------------------------------------------------------ #
+  # ANDROID (.apk)
+  # ------------------------------------------------------------------ #
+  build-android:
+    name: Build Android (.apk)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer le JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: "17"
+
+      - name: Installer Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+          cache: true
+
+      - name: Completer le wrapper Gradle si absent
+        # Le depot fournit desormais un squelette Android complet et
+        # coherent (namespace/applicationId alignes sur MainActivity.kt),
+        # utile aussi pour l'import direct dans FlutLab. Seul le binaire
+        # gradle-wrapper.jar n'est pas committe (fichier binaire compile,
+        # regenere ici a partir du SDK Flutter installe pour garantir une
+        # version toujours compatible). Les fichiers deja presents dans le
+        # depot ne sont jamais ecrases (pas de --overwrite).
+        run: |
+          if [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
+            echo "gradle-wrapper.jar manquant : regeneration via 'flutter create'..."
+            flutter create --platforms=android --org com.ecole .
+          fi
+
+      - name: Recuperer les dependances
+        run: flutter pub get
+
+      - name: Analyse statique (informatif, ne bloque pas le build)
+        run: flutter analyze
+        continue-on-error: true
+
+      - name: Construire l'APK (release)
+        run: flutter build apk --release
+
+      - name: Publier l'APK comme artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecole-primaire-android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+
+  # ------------------------------------------------------------------ #
+  # WINDOWS (.exe)
+  # ------------------------------------------------------------------ #
+  # ------------------------------------------------------------------ #
+  # iOS (verification de build, non signe)
+  # ------------------------------------------------------------------ #
+  build-ios:
+    name: Verifier le build iOS (non signe)
+    runs-on: macos-latest
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+          cache: true
+
+      - name: Recuperer les dependances
+        run: flutter pub get
+
+      - name: Construire (sans signature, verification uniquement)
+        # Aucune IPA distribuable n'est produite ici (necessiterait un
+        # certificat/profil de provisionnement Apple). Ce job confirme
+        # seulement que le projet Xcode (ios/) compile correctement.
+        run: flutter build ios --release --no-codesign
+
+      - name: Publier le .app non signe comme artefact (verification)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecole-primaire-ios-app-non-signe
+          path: build/ios/iphoneos/Runner.app
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows (.exe)
+    runs-on: windows-latest
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+          cache: true
+
+      - name: Activer le support desktop Windows
+        run: flutter config --enable-windows-desktop
+
+      - name: Generer le squelette Windows si absent
+        # Le depot ne fournit aucun fichier "windows/" specifique a
+        # personnaliser : on le genere entierement ici, sans risque
+        # d'ecrasement puisque rien n'existe encore.
+        shell: bash
+        run: |
+          if [ ! -d windows ]; then
+            echo "Squelette Windows manquant : generation via 'flutter create'..."
+            flutter create --platforms=windows .
+          fi
+
+      - name: Recuperer les dependances
+        run: flutter pub get
+
+      - name: Construire l'executable (release)
+        run: flutter build windows --release
+
+      - name: Compresser l'executable et ses dependances
+        shell: pwsh
+        run: |
+          $releaseDir = Get-ChildItem -Path build/windows -Recurse -Directory -Filter Release |
+            Select-Object -First 1
+          if (-not $releaseDir) {
+            throw "Dossier 'Release' introuvable sous build/windows"
+          }
+          Compress-Archive -Path "$($releaseDir.FullName)/*" -DestinationPath ecole_primaire-windows.zip
+
+      - name: Publier l'EXE comme artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecole-primaire-windows-exe
+          path: ecole_primaire-windows.zip
+          if-no-files-found: error
+
+  # ------------------------------------------------------------------ #
+  # RELEASE GITHUB (uniquement sur un tag "vX.Y.Z")
+  # ------------------------------------------------------------------ #
+  release:
+    name: Publier la release GitHub
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-android, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Telecharger les artefacts
+        uses: actions/download-artifact@v4
+
+      - name: Creer/mettre a jour la release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ecole-primaire-android-apk/app-release.apk
+            ecole-primaire-windows-exe/ecole_primaire-windows.zip
