@@ -51,7 +51,7 @@ jobs:
         run: |
           if [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
             echo "gradle-wrapper.jar manquant : regeneration via 'flutter create'..."
-            flutter create --platforms=android --org com.ecole .
+            flutter create --platforms=android --org com.ecole --project-name ecole_primaire .
           fi
 
       - name: Recuperer les dependances
@@ -132,7 +132,7 @@ jobs:
         run: |
           if [ ! -d windows ]; then
             echo "Squelette Windows manquant : generation via 'flutter create'..."
-            flutter create --platforms=windows .
+            flutter create --platforms=windows --project-name ecole_primaire .
           fi
 
       - name: Recuperer les dependances
