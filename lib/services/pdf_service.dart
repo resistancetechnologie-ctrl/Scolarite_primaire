@@ -21,6 +21,15 @@ class PdfService {
   static const light = PdfColor.fromInt(0xFFDCF8C6);
   static const greyBg = PdfColor.fromInt(0xFFECE5DD);
 
+  static Future<pw.Document> _nouveauDocument() async {
+    return pw.Document(
+      theme: pw.ThemeData.withFont(
+        base: await PdfGoogleFonts.notoSansRegular(),
+        bold: await PdfGoogleFonts.notoSansBold(),
+      ),
+    );
+  }
+
   static pw.MemoryImage? _img(String b64) {
     if (b64.isEmpty) return null;
     try {
@@ -129,7 +138,7 @@ class PdfService {
   // ----------------------------------------------------------- BULLETINS
   static Future<Uint8List> bulletins(AppState s, String classe, String periode,
       {List<String>? eleveIds}) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     final resultats = CalculService.resultatsClasse(s, classe, periode);
     final filtres = eleveIds == null
         ? resultats
@@ -264,7 +273,7 @@ class PdfService {
 
   // ------------------------------------------------- FICHE CALCUL MOYENNES
   static Future<Uint8List> ficheCalculMoyennes(AppState s, String classe, String periode) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     final matieres = Matieres.pourClasse(classe);
     final res = CalculService.resultatsClasse(s, classe, periode);
     doc.addPage(pw.MultiPage(
@@ -301,7 +310,7 @@ class PdfService {
 
   // ----------------------------------------------------- DELIBERATION
   static Future<Uint8List> ficheDeliberation(AppState s, String classe, String periode) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     final res = CalculService.resultatsClasse(s, classe, periode);
     final admis = res.where((r) => r.moyenne >= 5).length;
     doc.addPage(pw.MultiPage(
@@ -339,7 +348,7 @@ class PdfService {
 
   // ------------------------------------------------------ LISTE ELEVES
   static Future<Uint8List> listeEleves(AppState s, String classe, {bool emargement = false}) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     final eleves = s.elevesDe(classe);
     doc.addPage(pw.MultiPage(
       margin: const pw.EdgeInsets.all(24),
@@ -366,7 +375,7 @@ class PdfService {
 
   // -------------------------------------------------- REGISTRE DE NOTES
   static Future<Uint8List> registreNotes(AppState s, String classe, String periode) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     final eleves = s.elevesDe(classe);
     final matieres = Matieres.nomsPourClasse(classe);
     final evals = CalculService.evaluationsDePeriode(periode);
@@ -398,7 +407,7 @@ class PdfService {
 
   // ------------------------------------------------- REGISTRE D'APPEL
   static Future<Uint8List> registreAppel(AppState s, String classe, DateTime debut, DateTime fin) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     final eleves = s.elevesDe(classe);
     final jours = <DateTime>[];
     for (var d = debut; !d.isAfter(fin); d = d.add(const Duration(days: 1))) {
@@ -435,7 +444,7 @@ class PdfService {
 
   // ---------------------------------------------- STATISTIQUES CLASSE
   static Future<Uint8List> statistiquesClasse(AppState s, String classe, String periode) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     final matieres = Matieres.nomsPourClasse(classe);
     final res = CalculService.resultatsClasse(s, classe, periode);
     final evo = CalculService.evolutionClasse(s, classe);
@@ -479,7 +488,7 @@ class PdfService {
 
   // ------------------------------------------------- TABLEAU D'HONNEUR
   static Future<Uint8List> tableauHonneur(AppState s, String periode) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     doc.addPage(pw.MultiPage(
       margin: const pw.EdgeInsets.all(24),
       build: (ctx) => [
@@ -509,7 +518,7 @@ class PdfService {
 
   // ------------------------------------------------- RAPPORT ANNUEL
   static Future<Uint8List> rapportAnnuel(AppState s) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     final alertes = AlerteService.pourEcole(s).where((a) => a.niveau == 'critique').take(20).toList();
     doc.addPage(pw.MultiPage(
       margin: const pw.EdgeInsets.all(24),
@@ -562,7 +571,7 @@ class PdfService {
   // ---------------------------------------------- DOCUMENTS ADMINISTRATIFS
   static Future<Uint8List> documentAdministratif(
       AppState s, Eleve e, String type, {String texteLibre = ''}) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     String corps;
     switch (type) {
       case 'Attestation de scolarite':
@@ -658,7 +667,7 @@ class PdfService {
 
   // -------------------------------------------------- DOSSIER ELEVE
   static Future<Uint8List> dossierEleve(AppState s, Eleve e) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     final evo = CalculService.evolutionEleve(s, e);
     final comps = s.comportements.where((c) => c.eleveId == e.id).toList();
     doc.addPage(pw.MultiPage(
@@ -721,7 +730,7 @@ class PdfService {
 
   // -------------------------------------------------- CAHIER DE TEXTES
   static Future<Uint8List> cahierTextes(AppState s, String classe) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     final l = s.cahier.where((c) => c.classe == classe && c.anneeScolaire == s.annee).toList()
       ..sort((a, b) => b.date.compareTo(a.date));
     doc.addPage(pw.MultiPage(
@@ -743,7 +752,7 @@ class PdfService {
 
   // -------------------------------------------------- EMPLOI DU TEMPS
   static Future<Uint8List> emploiDuTemps(AppState s, String classe) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
     final l = s.edt.where((c) => c.classe == classe).toList()
       ..sort((a, b) => a.debut.compareTo(b.debut));
@@ -769,7 +778,7 @@ class PdfService {
 
   // -------------------------------------------------- FRAIS SCOLAIRES
   static Future<Uint8List> etatFrais(AppState s) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     doc.addPage(pw.MultiPage(
       margin: const pw.EdgeInsets.all(24),
       build: (ctx) => [
@@ -798,7 +807,7 @@ class PdfService {
 
   // --------------------------------------------- DOSSIER D'INSPECTION
   static Future<Uint8List> dossierInspection(AppState s, String periode) async {
-    final doc = pw.Document();
+    final doc = await _nouveauDocument();
     doc.addPage(pw.Page(
       margin: const pw.EdgeInsets.all(28),
       build: (ctx) => pw.Column(children: [
