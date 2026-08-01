@@ -1,6 +1,5 @@
 import '../core/constants.dart';
 import '../data/app_state.dart';
-import '../models/models.dart';
 import 'calcul_service.dart';
 
 class Alerte {

@@ -41,17 +41,18 @@ jobs:
           cache: true
 
       - name: Completer le wrapper Gradle si absent
-        # Le depot fournit desormais un squelette Android complet et
-        # coherent (namespace/applicationId alignes sur MainActivity.kt),
-        # utile aussi pour l'import direct dans FlutLab. Seul le binaire
-        # gradle-wrapper.jar n'est pas committe (fichier binaire compile,
-        # regenere ici a partir du SDK Flutter installe pour garantir une
-        # version toujours compatible). Les fichiers deja presents dans le
-        # depot ne sont jamais ecrases (pas de --overwrite).
+        # Le binaire gradle-wrapper.jar n'est pas committe, car les fichiers
+        # binaires ne sont pas supportes dans ce depot. Pour eviter que
+        # `flutter create` ecrase le squelette Android versionne (compileSdk,
+        # namespace, applicationId, etc.), on genere un projet temporaire et
+        # on copie uniquement le JAR du wrapper.
         run: |
           if [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
-            echo "gradle-wrapper.jar manquant : regeneration via 'flutter create'..."
-            flutter create --platforms=android --org com.ecole --project-name ecole_primaire .
+            echo "gradle-wrapper.jar manquant : generation dans un projet temporaire..."
+            tmp_dir="$(mktemp -d)"
+            flutter create --platforms=android --org com.ecole --project-name ecole_primaire "$tmp_dir"
+            cp "$tmp_dir/android/gradle/wrapper/gradle-wrapper.jar" android/gradle/wrapper/gradle-wrapper.jar
+            rm -rf "$tmp_dir"
           fi
 
       - name: Recuperer les dependances
