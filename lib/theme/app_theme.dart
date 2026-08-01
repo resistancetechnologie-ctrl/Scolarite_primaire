@@ -41,12 +41,12 @@ class AppTheme {
         backgroundColor: WA.lightGreen,
         foregroundColor: Colors.white,
       ),
-      tabBarTheme: const TabBarThemeData(
+      tabBarTheme: const TabBarTheme(
         labelColor: Colors.white,
         unselectedLabelColor: Color(0xCCFFFFFF),
         indicatorColor: WA.lightGreen,
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: Colors.white,
         elevation: 1,
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
