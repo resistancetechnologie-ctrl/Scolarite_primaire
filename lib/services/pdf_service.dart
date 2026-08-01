@@ -57,7 +57,7 @@ class PdfService {
             pw.Text(s.ecole.nom.toUpperCase(),
                 style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold, color: green)),
             if (s.ecole.devise.isNotEmpty)
-              pw.Text(s.ecole.devise, style: const pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic)),
+              pw.Text(s.ecole.devise, style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic)),
             pw.Text(
                 [s.ecole.adresse, s.ecole.telephone, s.ecole.email].where((e) => e.isNotEmpty).join(' | '),
                 style: const pw.TextStyle(fontSize: 8), textAlign: pw.TextAlign.center),
