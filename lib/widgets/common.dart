@@ -121,7 +121,7 @@ class EmptyState extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(icone, size: 56, color: WA.grey.withValues(alpha: .5)),
+            Icon(icone, size: 56, color: WA.grey.withOpacity(.5)),
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center, style: const TextStyle(color: WA.grey)),
           ]),

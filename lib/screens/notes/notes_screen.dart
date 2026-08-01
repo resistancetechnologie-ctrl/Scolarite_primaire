@@ -72,7 +72,7 @@ class _NotesScreenState extends State<NotesScreen> {
         if (verrouille)
           Container(
             width: double.infinity,
-            color: WA.warn.withValues(alpha: .2),
+            color: WA.warn.withOpacity(.2),
             padding: const EdgeInsets.all(8),
             child: const Text('Notes verrouillees par le directeur : modification impossible.',
                 style: TextStyle(fontSize: 12)),
