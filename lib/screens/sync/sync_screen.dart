@@ -106,9 +106,11 @@ class _SyncScreenState extends State<SyncScreen> {
       s.log('EXPORT_JSON', cible: classe, apres: nom);
       await s.save();
       if (!context.mounted) return;
-      await Share.shareXFiles(
-        [XFile(f.path)],
-        text: 'Donnees de la classe $classe - ${s.annee} - $periode',
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(f.path)],
+          text: 'Donnees de la classe $classe - ${s.annee} - $periode',
+        ),
       );
       if (context.mounted) showOk(context, 'Fichier genere : $nom');
     } catch (e) {
@@ -117,7 +119,7 @@ class _SyncScreenState extends State<SyncScreen> {
   }
 
   Future<void> _importer(BuildContext context, AppState s) async {
-    final res = await FilePicker.platform.pickFiles(
+    final res = await FilePicker.pickFiles(
         allowMultiple: true, type: FileType.custom, allowedExtensions: ['json']);
     if (res == null) return;
     final rapport = StringBuffer();
