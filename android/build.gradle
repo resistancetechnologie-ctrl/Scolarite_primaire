@@ -15,7 +15,7 @@ subprojects {
 
 subprojects { subproject ->
     subproject.plugins.withId("com.android.library") {
-        subproject.android.compileSdk = 35
+        subproject.android.compileSdk = 36
     }
 }
 
