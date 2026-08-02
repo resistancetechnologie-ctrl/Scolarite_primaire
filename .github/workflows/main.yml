@@ -145,20 +145,75 @@ jobs:
       - name: Construire l'executable (release)
         run: flutter build windows --release
 
-      - name: Compresser l'executable et ses dependances
+      - name: Preparer le dossier Windows portable
         shell: pwsh
         run: |
-          $releaseDir = Get-ChildItem -Path build/windows -Recurse -Directory -Filter Release |
+          $exe = Get-ChildItem -Path build/windows -Recurse -File -Filter ecole_primaire.exe |
+            Where-Object { $_.FullName -match '\\Release\\' } |
             Select-Object -First 1
-          if (-not $releaseDir) {
-            throw "Dossier 'Release' introuvable sous build/windows"
+          if (-not $exe) {
+            throw "Executable Windows 'ecole_primaire.exe' introuvable sous build/windows/**/Release"
           }
-          Compress-Archive -Path "$($releaseDir.FullName)/*" -DestinationPath ecole_primaire-windows.zip
 
-      - name: Publier l'EXE comme artefact
+          $releaseDir = $exe.Directory
+          New-Item -ItemType Directory -Force -Path dist/windows | Out-Null
+          Copy-Item -Path "$($releaseDir.FullName)/*" -Destination dist/windows -Recurse -Force
+
+      - name: Installer Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Construire l'installateur Windows (.exe)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/installer | Out-Null
+          @'
+          [Setup]
+          AppId={{EcolePrimaireGestionScolaire}}
+          AppName=Ecole Primaire
+          AppVersion=1.0.0
+          AppPublisher=Ecole Primaire
+          DefaultDirName={autopf}\Ecole Primaire
+          DefaultGroupName=Ecole Primaire
+          OutputDir=dist\installer
+          OutputBaseFilename=ecole_primaire-setup
+          Compression=lzma2
+          SolidCompression=yes
+          WizardStyle=modern
+          SetupIconFile=dist\windows\ecole_primaire.exe
+          UninstallDisplayIcon={app}\ecole_primaire.exe
+
+          [Languages]
+          Name: "french"; MessagesFile: "compiler:Languages\French.isl"
+
+          [Tasks]
+          Name: "desktopicon"; Description: "Creer une icone sur le Bureau"; GroupDescription: "Icones supplementaires :"
+
+          [Files]
+          Source: "dist\windows\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+          [Icons]
+          Name: "{group}\Ecole Primaire"; Filename: "{app}\ecole_primaire.exe"
+          Name: "{commondesktop}\Ecole Primaire"; Filename: "{app}\ecole_primaire.exe"; Tasks: desktopicon
+
+          [Run]
+          Filename: "{app}\ecole_primaire.exe"; Description: "Lancer Ecole Primaire"; Flags: nowait postinstall skipifsilent
+          '@ | Set-Content -Path installer.iss -Encoding UTF8
+
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer.iss
+          if (-not (Test-Path dist/installer/ecole_primaire-setup.exe)) {
+            throw "Installateur Windows 'ecole_primaire-setup.exe' non genere"
+          }
+
+      - name: Compresser l'executable portable et l'installateur
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist/windows/*, dist/installer/ecole_primaire-setup.exe -DestinationPath ecole_primaire-windows.zip
+
+      - name: Publier le ZIP Windows comme artefact
         uses: actions/upload-artifact@v4
         with:
-          name: ecole-primaire-windows-exe
+          name: ecole-primaire-windows-zip
           path: ecole_primaire-windows.zip
           if-no-files-found: error
 
@@ -179,4 +234,4 @@ jobs:
         with:
           files: |
             ecole-primaire-android-apk/app-release.apk
-            ecole-primaire-windows-exe/ecole_primaire-windows.zip
+            ecole-primaire-windows-zip/ecole_primaire-windows.zip
