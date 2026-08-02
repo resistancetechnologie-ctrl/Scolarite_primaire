@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  FLUTTER_VERSION: "3.24.5"
+  FLUTTER_VERSION: "3.44.7"
 
 permissions:
   contents: write
@@ -110,7 +110,7 @@ jobs:
 
   build-windows:
     name: Build Windows (.exe)
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Recuperer le code
         uses: actions/checkout@v4
@@ -138,6 +138,9 @@ jobs:
 
       - name: Recuperer les dependances
         run: flutter pub get
+
+      - name: Diagnostiquer l'environnement Flutter et Visual Studio
+        run: flutter doctor -v
 
       - name: Construire l'executable (release)
         run: flutter build windows --release

@@ -69,7 +69,12 @@ class _VerificationScreenState extends State<VerificationScreen> {
               Center(
                 child: Padding(
                   padding: const EdgeInsets.all(12),
-                  child: QrImageView(data: qrData!, size: 160, foregroundColor: WA.teal),
+                  child: QrImageView(
+                    data: qrData!,
+                    size: 160,
+                    eyeStyle: const QrEyeStyle(color: WA.teal),
+                    dataModuleStyle: const QrDataModuleStyle(color: WA.teal),
+                  ),
                 ),
               ),
           ],
