@@ -19,7 +19,7 @@ android {
     // Doit correspondre au package declare dans MainActivity.kt
     // (android/app/src/main/kotlin/com/ecole/primaire/MainActivity.kt).
     namespace = "com.ecole.primaire"
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = "25.1.8937393"
 
     compileOptions {
@@ -38,7 +38,7 @@ android {
     defaultConfig {
         applicationId = "com.ecole.primaire"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 35
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }

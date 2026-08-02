@@ -119,7 +119,7 @@ class PdfService {
       );
 
   static pw.TableRow _tr(List<String> cells,
-      {bool header = false, PdfColor? bg, List<int>? flex}) {
+      {bool header = false, PdfColor? bg}) {
     return pw.TableRow(
       decoration: pw.BoxDecoration(color: bg ?? (header ? light : null)),
       children: [
