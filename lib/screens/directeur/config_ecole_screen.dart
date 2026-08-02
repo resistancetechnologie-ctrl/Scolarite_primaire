@@ -181,8 +181,7 @@ class _ConfigEcoleScreenState extends State<ConfigEcoleScreen> {
             icon: const Icon(Icons.upload_file),
             label: const Text('Importer des donnees de test (JSON)'),
             onPressed: () async {
-              final res = await FilePicker.platform
-                  .pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+              final res = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
               if (res == null || res.files.single.path == null) return;
               if (!context.mounted) return;
               if (!await confirmer(context, 'Importer des donnees de test',
@@ -226,7 +225,9 @@ class _ConfigEcoleScreenState extends State<ConfigEcoleScreen> {
               final txt = const JsonEncoder.withIndent('  ').convert(SyncService.modeleDonneesTest());
               final f = await s.store.writeExportString('exemple_donnees_test.json', txt);
               if (!context.mounted) return;
-              await Share.shareXFiles([XFile(f.path)], text: 'Exemple de donnees de test');
+              await SharePlus.instance.share(
+                ShareParams(files: [XFile(f.path)], text: 'Exemple de donnees de test'),
+              );
             },
           ),
         ]),
