@@ -58,7 +58,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		331C8080294A63A400263BE5 /* Frameworks */ = {
+		331C807E294A63A400263BE5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -137,7 +137,7 @@
 			buildPhases = (
 				331C807D294A63A400263BE5 /* Sources */,
 				331C807F294A63A400263BE5 /* Resources */,
-				331C8080294A63A400263BE5 /* Frameworks */,
+				331C807E294A63A400263BE5 /* Frameworks */,
 			);
 			buildRules = (
 			);
